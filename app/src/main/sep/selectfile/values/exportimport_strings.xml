@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--string name="directory">libdb_backup</string-->
+    <!--string name="extension">.lib_csv</string-->
+
+	<string name="dialog_input_hint">Indító érték</string>
+    <string name="dialog_button_start">Start</string>
+    <string name="dialog_button_cancel">Cancel</string>
+    <string name="dialog_button_ready">Ready</string>
+    
+    <string name="dialog_export_title">Exporting to file:</string>
+    <string name="dialog_import_title">Importing from file:</string>
+	
+    <string name="dialog_error_cannot_create">Cannot create </string>
+    <string name="dialog_sd_card_error">Cannot reach SD-Card!</string>
+    <string name="dialog_create_directory">Create new directory</string>
+    <string name="dialog_create_file">Create new file</string>
+
+    <string name="dialog_export">Export to</string>
+    <string name="dialog_export_warning">Export overwrites the existing file!</string>
+    <string name="dialog_import">Import records from</string>
+    
+    <string name="dialog_button_ok">OK</string>
+    <string name="dialog_button_create">Create</string>
+    <string name="dialog_button_import">Import</string>
+    <string name="dialog_button_export">Export</string>
+    <string name="dialog_button_export_overwrite">Overwrite and Export</string>
+    
+    <string name="msg_error">"Task error!"</string>
+    <string name="msg_error_sdcard">"SDCard is not ready!"</string>
+    <string name="msg_error_database_empty">"Database is empty!"</string>
+    <string name="msg_error_database_name">"Incompatible database name!"</string>
+    <string name="msg_error_database_version">"Incompatible database version!"</string>
+	<string name="msg_error_directory">"No such directory!"</string>
+	<string name="msg_error_file">"No such file!"</string>
+	<string name="msg_error_io">"Error: "</string>
+
+	<!--string name="msg_cancel">"Task cancelled!"</string-->
+    <!--string name="msg_ready">"Task ready!"</string-->
+    
+</resources>
