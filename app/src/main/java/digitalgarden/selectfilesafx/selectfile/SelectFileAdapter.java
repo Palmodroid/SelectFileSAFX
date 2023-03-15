@@ -31,7 +31,7 @@ public class SelectFileAdapter extends BaseAdapter implements Filterable
 	
     SelectFileAdapter(Context context, List<SelectFileEntry> entries)
 		{
-        super();
+		super();
 		
 		this.layoutInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.originalEntries = entries;
@@ -94,9 +94,12 @@ public class SelectFileAdapter extends BaseAdapter implements Filterable
 			{
 			rowView = (convertView == null) ? layoutInflater.inflate(
 					R.layout.file_entry_header_row_view, null) : convertView;
-			
+
+
 			TextView title = rowView.findViewById( R.id.divider_title );
 			title.setText( entry.getName( context ));
+			ImageView icon = rowView.findViewById( R.id.folder_select_icon );
+			icon.setVisibility( isEnabled(position) ? View.VISIBLE : View.GONE );
 			}
 		else
     		{
@@ -153,6 +156,7 @@ public class SelectFileAdapter extends BaseAdapter implements Filterable
 							if (!originalEntries.get(i).getName(context).toLowerCase(Locale.getDefault()).contains(constraint))
 								break;
 						case SelectFileEntry.HEADER:
+						case SelectFileEntry.HEADER_SELECTABLE:
 						case SelectFileEntry.HOME:
 						case SelectFileEntry.BACK:
 						case SelectFileEntry.NEW_FOLDER:

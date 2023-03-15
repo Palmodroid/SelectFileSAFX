@@ -11,12 +11,16 @@
     <string name="title_header">Contents of root folder</string>
     <string name="parent_folder">Back to Parent Folder</string>
     <string name="parent_folder_short">..</string>
+    <string name="home">HOME</string>
+    <string name="home_short">Back to Main Folder</string>
     <string name="create_new_file">Create new file!</string>
     <string name="create_new_file_short">NEW</string>
     <string name="create_new_folder">Create new folder!</string>
     <string name="create_new_folder_short">NEW</string>
     <string name="link_folder">Link to folder! (Built-in explorer)</string>
     <string name="link_folder_short">LINK</string>
+    <string name="unlink_folder">Unlink this folder and back to parent!</string>
+    <string name="unlink_folder_short">UNLINK&amp;BACK</string>
     <string name="simple_date_format">yy.MM.dd</string>
     <string name="separator">; </string>
     <string name="items"> items</string>

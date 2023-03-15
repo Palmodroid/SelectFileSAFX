@@ -1,7 +1,6 @@
 package digitalgarden.selectfilesafx.selectfile;
 
 
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.UriPermission;
@@ -9,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -16,7 +16,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,12 +27,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
-import digitalgarden.selectfilesafx.MainActivity;
 import digitalgarden.selectfilesafx.fileoperations.FileOperations;
 import digitalgarden.selectfilesafx.R;
 
 public class SelectFileActivity extends AppCompatActivity
     {
+    public final static int RESULT_MAIN_FOLDER_SELECTED = RESULT_FIRST_USER + 1;
+
 
     // Viewmodel will be cleared, if NOT configuration change destroys activity
     // https://stackoverflow.com/questions/50983738/when-is-the-viewmodel-oncleared-called
@@ -55,8 +55,6 @@ public class SelectFileActivity extends AppCompatActivity
     private EditText filter;
     private TextView ending;
 
-    private static final int OPEN_TREE_REQUEST_CODE = 1;
-
 
     ActivityResultLauncher<Uri> launchSAFOPenDocumentTree = registerForActivityResult(
             new ActivityResultContracts.OpenDocumentTree(),
@@ -71,14 +69,17 @@ public class SelectFileActivity extends AppCompatActivity
                                 Intent.FLAG_GRANT_READ_URI_PERMISSION |
                                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
-                        // go to the newly selected dir
+                            // go to the newly selected dir
                         populate(new DataFile(
                                 DocumentFile.fromTreeUri(SelectFileActivity.this, uri)));
                         }
                     }
                 });
 
-
+    private boolean isOpenDocumentTree()
+        {
+        return Intent.ACTION_OPEN_DOCUMENT_TREE.equals(getIntent().getAction());
+        }
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -114,7 +115,7 @@ public class SelectFileActivity extends AppCompatActivity
                     case SelectFileEntry.LINK_FOLDER:
                         // TODO: Drop message to allow a new folder!!!
                         launchSAFOPenDocumentTree.launch(
-                                FileOperations.getStartingDirectoryAsUri(SelectFileActivity.this));
+                                FileOperations.getStartingFolderAsUri(SelectFileActivity.this));
                         break;
 
                     case SelectFileEntry.UNLINK_FOLDER:
@@ -178,7 +179,7 @@ public class SelectFileActivity extends AppCompatActivity
                                         Toast.LENGTH_SHORT).show();
                                 }
                             }
-                        else
+                        else if ( !isOpenDocumentTree() )
                             {
                             Intent returnIntent = new Intent();
 
@@ -187,12 +188,26 @@ public class SelectFileActivity extends AppCompatActivity
                             finish();
                             }
                         break;
-                    case SelectFileEntry.HEADER:
-                        Toast.makeText(SelectFileActivity.this,
+                    case SelectFileEntry.HEADER_SELECTABLE:
+                        // HEADER is NOT selectable, so it hasn't got onItemClick...
+                        DataFile dataFile = entry.getDataFile();
+
+                        if (dataFile == null)       // Main entry was selected
+                            {
+                            setResult( RESULT_MAIN_FOLDER_SELECTED );
+                            }
+                        else
+                            {
+                            Intent returnIntent = new Intent();
+                            returnIntent.setData(dataFile.getUri(SelectFileActivity.this));
+                            setResult(RESULT_OK, returnIntent);
+                            }
+                        finish();
+                        /* Toast.makeText(SelectFileActivity.this,
                                 (entry.getDataFile() == null ? "Main folder " :
                                         entry.getDataFile().getUri(SelectFileActivity.this)) +
                                         " was selected",
-                                Toast.LENGTH_SHORT).show();
+                                Toast.LENGTH_SHORT).show(); */
                         break;
                     }
                 }
@@ -245,15 +260,8 @@ public class SelectFileActivity extends AppCompatActivity
         {
         List<SelectFileEntry> entries = new ArrayList<SelectFileEntry>();
 
-        // private folder
-        // DocumentFile privateFolder = DocumentFile.fromFile(getExternalFilesDir(null)); // app's
-        // private folder
-        DataFile privateFolder = new DataFile( getFilesDir() ); // app's private
-        // folder
-            /* These are private folders as well - but not needed to list here
-               Log.d("UP", "Dirs: " + getFilesDir() + " , " + getCacheDir() + " , "
-               + getExternalFilesDir( Environment.DIRECTORY_PICTURES ) + " , " +
-               getExternalMediaDirs()); */
+        // app's private folder
+        DataFile privateFolder = new DataFile( FileOperations.getPrivateFolder(this) );
 
         // main folder contains the private folder AND each linked folder
         // populate( folder )
@@ -269,7 +277,8 @@ public class SelectFileActivity extends AppCompatActivity
             folder = privateFolder;
 
             // Add header for main folder
-            entries.add(new SelectFileEntry( null, SelectFileEntry.HEADER ));
+            entries.add(new SelectFileEntry( null,
+                    isOpenDocumentTree() ? SelectFileEntry.HEADER_SELECTABLE : SelectFileEntry.HEADER ));
 
             // Add link command
             entries.add(new SelectFileEntry(null, SelectFileEntry.LINK_FOLDER));
@@ -285,8 +294,8 @@ public class SelectFileActivity extends AppCompatActivity
         else // This is a real folder, or linked folder
             {
             // Add header
-            entries.add(new SelectFileEntry( folder, SelectFileEntry.HEADER ));
-
+            entries.add(new SelectFileEntry( folder,
+                    isOpenDocumentTree() ? SelectFileEntry.HEADER_SELECTABLE : SelectFileEntry.HEADER ));
 
             DataFile parentFolder = folder.getParentFolder();
             // parentFolder cannot be null, as folder is valid (not main folder)

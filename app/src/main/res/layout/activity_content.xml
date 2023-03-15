@@ -21,7 +21,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="2dp"
-            android:background="@color/teal_200"
+            android:background="@color/purple_500"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"/>
 
@@ -33,7 +33,7 @@
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
-            android:id="@+id/ed1"
+            android:id="@+id/file_name_of_saved_file"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Hint" >
@@ -48,14 +48,14 @@
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
-            android:id="@+id/ed2"
+            android:id="@+id/content_of_saved_file"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minLines="3"
             android:hint="Content" />
 
         <Button
-            android:id="@+id/button1"
+            android:id="@+id/button_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="10dp"
@@ -66,12 +66,12 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="2dp"
-            android:background="@color/teal_200"
+            android:background="@color/purple_500"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"/>
 
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/button_load"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingStart="10dp"
@@ -87,7 +87,7 @@
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
-            android:id="@+id/ed3"
+            android:id="@+id/file_name_of_loaded_file"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Hint" />
@@ -100,34 +100,53 @@
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
-            android:id="@+id/ed4"
+            android:id="@+id/content_of_loaded_file"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minLines="3"
             android:hint="Content" />
 
-        <!-- Not used views are set to GONE -->
-        <LinearLayout
+        <View
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:visibility="gone">
+            android:layout_height="2dp"
+            android:background="@color/purple_500"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"/>
 
-            <TextView
-                android:id="@+id/tx5"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Label"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+        <TextView
+            android:id="@+id/tx5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" File to find in selected folder:"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
-            <EditText
-                android:id="@+id/ed5"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Hint"
-                />
+        <EditText
+            android:id="@+id/file_in_folder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="File" />
 
-        </LinearLayout>
+        <Button
+            android:id="@+id/button_select_folder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:layout_gravity="left"
+            android:text="SELECT FOLDER" />
+
+        <TextView
+            android:id="@+id/tx6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" Uri of the file:"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <EditText
+            android:id="@+id/uri_in_folder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="File" />
 
     </LinearLayout>
 

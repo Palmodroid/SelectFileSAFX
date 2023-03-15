@@ -17,32 +17,40 @@ import digitalgarden.selectfilesafx.R;
  */
 class SelectFileEntry implements Comparable<SelectFileEntry>
 	{
-	// HEADER HOME BACK NEW_FOLDER NEW_FILE LINKED_FOLDER LINK_FOLDER UNLINK_FOLDER FOLDER FILE
+	// HEADER HEADER_SELECTABLE HOME BACK NEW_FOLDER NEW_FILE LINKED_FOLDER LINK_FOLDER
+	// UNLINK_FOLDER FOLDER FILE
+
+	// Non-header entries should start above this!!
+	private final static int NONHEADERS = 0;
 
 	// Important! numeric values set order inside list!
-	final static int HEADER = 0;	// First row of the list: name of current folder OR Main folder
+	final static int HEADER = NONHEADERS - 2;	// First row of the list: name of current folder
+	// OR Main folder
 		// file: NULL for main folder OR documentfile of current folder
 		// HEADER has different view!
 		// HEADER is not allowed to click - when selecting folder!
 		// HEADER has no icon and no data - but it has selection icon on the right side
 
-	final static int HOME = 1;			// Go back to main folder
+	final static int HEADER_SELECTABLE = NONHEADERS - 1;
+		// Same as header, but selectable, if folder should be selected (ACTION_OPEN_DOCUMENT_TREE)
+
+	final static int HOME = NONHEADERS + 1;			// Go back to main folder
 	// file: main folder - could be null (as main folder)
-	final static int BACK = 2;			// Go bact to parent folder
+	final static int BACK = NONHEADERS + 2;			// Go bact to parent folder
 	// file: parent folder
-	final static int LINKED_FOLDER = 3;	// Go to linked folder
+	final static int LINKED_FOLDER = NONHEADERS + 3;	// Go to linked folder
 	// file: linked folder
-	final static int LINK_FOLDER= 4;	// Allow new folder inside main folder
+	final static int LINK_FOLDER= NONHEADERS + 4;	// Allow new folder inside main folder
 	// file: NULL
-	final static int FOLDER = 5;		// Folder entry
+	final static int FOLDER = NONHEADERS + 5;		// Folder entry
 	// file: folder
-	final static int NEW_FOLDER = 6;	// Create new folder
+	final static int NEW_FOLDER = NONHEADERS + 6;	// Create new folder
 	// file: NULL
-	final static int FILE = 7;			// File entry
+	final static int FILE = NONHEADERS + 7;			// File entry
 	// file: file
-	final static int NEW_FILE = 8;		// Create new file
+	final static int NEW_FILE = NONHEADERS + 8;		// Create new file
 	// file: NULL
-	final static int UNLINK_FOLDER =9;	// Go back, and unlink this folder
+	final static int UNLINK_FOLDER = NONHEADERS + 9;	// Go back, and unlink this folder
 	// file: current (linked) folder - folder who's parent folder is null
 
 
@@ -72,6 +80,7 @@ class SelectFileEntry implements Comparable<SelectFileEntry>
 		switch (type)
 			{
 			case HEADER: // this will be the "title" string
+			case HEADER_SELECTABLE:
 				return ( dataFile == null ) ? // NULL means main folder
 					context.getString( R.string.title_header) : dataFile.getName();
 			case FOLDER:
@@ -84,7 +93,10 @@ class SelectFileEntry implements Comparable<SelectFileEntry>
 				return context.getString( R.string.create_new_folder_short );
 			case LINK_FOLDER:
 				return context.getString( R.string.link_folder_short );
-
+			case UNLINK_FOLDER:
+				return context.getString( R.string.unlink_folder_short );
+			case HOME:
+				return context.getString( R.string.home_short );
 			case BACK:
 				return context.getString( R.string.parent_folder_short);
 			}
@@ -109,6 +121,10 @@ class SelectFileEntry implements Comparable<SelectFileEntry>
 				return context.getString( R.string.create_new_folder );
 			case LINK_FOLDER:
 				return context.getString( R.string.link_folder );
+			case UNLINK_FOLDER:
+				return context.getString( R.string.unlink_folder );
+			case HOME:
+				return context.getString( R.string.home );
 			case BACK:
 				return context.getString( R.string.parent_folder );
 			}
@@ -151,22 +167,22 @@ class SelectFileEntry implements Comparable<SelectFileEntry>
 
 	static int getViewTypeCount()
 		{
-		return 2; // 0. HEADER and 1. all other entries
+		return 2; // 0. HEADER/HEADER_SELECTABLE and 1. all other entries
 		}
 
 	int getItemViewType()
 		{
-		return ( getType() == SelectFileEntry.HEADER ) ? 0 : 1;
+		return ( getType() < NONHEADERS ) ? 0 : 1;
 		}
 
 	static boolean areAllItemsEnabled()
 		{
-		return true; // if HEADER is not selectable: false;
+		return false; // HEADER is not selectable;
 		}
 
 	boolean isEnabled()
 		{
-		return true; // if HEADER is not selectable: getType() != SelectFileEntry.HEADER;
+		return getType() != HEADER; // HEADER is not selectable
 		}
 
 	/*

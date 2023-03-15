@@ -10,10 +10,14 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+
+import androidx.core.content.FileProvider;
+import androidx.documentfile.provider.DocumentFile;
 
 
 public class FileOperations
@@ -82,7 +86,7 @@ public class FileOperations
      * @param context application context
      * @return Uri of initial folder (currently "Documents") or null below API 29
      */
-    public static Uri getStartingDirectoryAsUri( Context context )
+    public static Uri getStartingFolderAsUri(Context context )
         {
         SharedPreferences sharedPreferences =
                 PreferenceManager.getDefaultSharedPreferences(context);
@@ -97,6 +101,61 @@ public class FileOperations
             return changeInitialFolder( uri );
             }
         }
+
+    public static File getPrivateFolder(Context context )
+        {
+        return context.getExternalFilesDir(null); // app's private folder
+        // <external-files-path name="external_files" path="." /> is needed inside file_provider_paths.xml
+
+//        return context.getFilesDir(); // app's private folder
+        // <files-path name="files" path="."/> is needed inside file_provider_paths.xml
+
+
+        /* These are private folders as well - but not needed to list here
+           Log.d("UP", "Dirs: " + getFilesDir() + " , " + getCacheDir() + " , "
+           + getExternalFilesDir( Environment.DIRECTORY_PICTURES ) + " , " +
+           getExternalMediaDirs()); */
+        }
+
+
+    public static Uri findFileInFolder( Context context, String fileName, Uri treeUri )
+        {
+        Uri fileUri = null;
+
+        if ( treeUri == null )  // private folder
+            {
+            File folder = getPrivateFolder(context);
+            File[] files = folder.listFiles();
+            if ( files != null )
+                {
+                for (File file : files)
+                    {
+                    if (file.getName().equals(fileName))
+                        {
+                        fileUri = FileProvider.getUriForFile( context,
+                                context.getApplicationContext().getPackageName() + ".provider",
+                                file);
+                        break;
+                        }
+                    }
+                }
+            }
+        else
+            {
+            DocumentFile folder = DocumentFile.fromTreeUri( context, treeUri );
+            if ( folder != null )
+                {
+                DocumentFile file = folder.findFile(fileName);
+                if ( file != null )
+                    {
+                    fileUri = file.getUri();
+                    }
+                }
+            }
+        return fileUri;
+        }
+
+
 
     /*
      * getStartingDirectoryAsIntent() was needed by StartActivityForResult()

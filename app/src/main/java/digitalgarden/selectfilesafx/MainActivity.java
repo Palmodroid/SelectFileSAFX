@@ -68,7 +68,8 @@ public class MainActivity extends AppCompatActivity
     private EditText contentOfSavedFile;
     private EditText fileNameOfLoadedFile;
     private EditText contentOfLoadedFile;
-
+    private EditText fileInFolder;
+    private EditText uriInFolder;
 
     /** onCreate just connects to layout elements, and sets SAVE and LOAD buttons */
     @Override
@@ -91,13 +92,21 @@ public class MainActivity extends AppCompatActivity
          */
 
         useExperimentalFileExplorerSwitch = findViewById(R.id.switchButton);
+        useExperimentalFileExplorerSwitch.setChecked(true);
 
-        fileNameOfSavedFile = findViewById(R.id.ed1);
-        contentOfSavedFile = findViewById(R.id.ed2);
-        fileNameOfLoadedFile = findViewById(R.id.ed3);
-        contentOfLoadedFile = findViewById(R.id.ed4);
+        fileNameOfSavedFile = findViewById(R.id.file_name_of_saved_file);
+        contentOfSavedFile = findViewById(R.id.content_of_saved_file);
+        // ButtonSave
 
-        Button buttonSave = findViewById(R.id.button1);
+        // ButtonLoad
+        fileNameOfLoadedFile = findViewById(R.id.file_name_of_loaded_file);
+        contentOfLoadedFile = findViewById(R.id.content_of_loaded_file);
+
+        fileInFolder = findViewById( R.id.file_in_folder );
+        // ButtonSelectFolder
+        uriInFolder = findViewById( R.id.uri_in_folder );
+
+        Button buttonSave = findViewById(R.id.button_save);
         buttonSave.setOnClickListener(new View.OnClickListener()
             {
             @Override
@@ -107,7 +116,7 @@ public class MainActivity extends AppCompatActivity
                 }
             });
 
-        Button buttonLoad = findViewById(R.id.button2);
+        Button buttonLoad = findViewById(R.id.button_load);
         buttonLoad.setOnClickListener(new View.OnClickListener()
             {
             @Override
@@ -116,10 +125,45 @@ public class MainActivity extends AppCompatActivity
                 loadFile();
                 }
             });
+
+        Button buttonSelectFolder = findViewById(R.id.button_select_folder);
+        buttonSelectFolder.setOnClickListener(new View.OnClickListener()
+            {
+            @Override
+            public void onClick(View v)
+                {
+                selectFolder();
+                }
+            });
+
         }
 
 
     /***** S A V E  P A R T *****/
+
+    /**
+     * saveFile()
+     * -> experimental -> intent - SelectFileActivity.class
+     *                    launchSave.launch() using ActivityResultContracts.StartActivityForResult()
+     *      ->  onActivityResult( result ); uri = result.getData.getData(); ==>
+     *
+     * -> built-in ->     launchSAFCreateDocument.launch( filename ) using
+     *                    new ContractCreateDocumentInFolder("text/plain") to set initial folder
+     *      ->  onActivityResult( uri ) ==>
+     *
+     *  ==> saveFile( uri )
+     *      FileOperations.writeFileContent( MainActivity.this, uri, content );
+     *
+     * Notes:
+     * StartActivityForResult() is a standard contract
+     *
+     * ContractCreateDocumentIinFolder has a constructor with mime-type (to create the file with);
+     * - ActivityResultLauncher<String> launchSAFCreateDocument - where String is the input file
+     * name used by contract and
+     * - new ActivityResultCallback<Uri>() - where Uri is the returned type (uri of the created
+     * file)
+     */
+
     private void saveFile()
         {
         if (useExperimentalFileExplorerSwitch.isChecked())
@@ -167,7 +211,7 @@ public class MainActivity extends AppCompatActivity
                 // so, this will work only above API 29
                 {
                 Uri uri;
-                if ((uri = FileOperations.getStartingDirectoryAsUri(context))!= null)
+                if ((uri = FileOperations.getStartingFolderAsUri(context))!= null)
                     {
                     intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri);
                     }
@@ -212,8 +256,57 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
+    ActivityResultLauncher<Intent> launchSave = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>()
+                {
+                @Override
+                public void onActivityResult(ActivityResult result)
+                    {
+                    if (result.getResultCode() != RESULT_OK)
+                        {
+                        Log.e("ERROR!", "Something went wrong!");
+                        }
+
+                    Intent resultData = result.getData();
+
+                    Uri uri = null;
+                    if (resultData != null)
+                        {
+                        uri = resultData.getData();
+                        // Perform operations on the document using its URI.
+                        }
+
+                    saveFile( uri );
+                    }
+                });
+
 
     /***** L O A D  P A R T *****/
+
+    /**
+     * loadFile()
+     * -> experimental -> intent - SelectFileActivity.class
+     *                    launchLoad.launch() using ActivityResultContracts.StartActivityForResult()
+     *      ->  onActivityResult( result ); uri = result.getData.getData(); ==>
+     *
+     * -> built-in ->     launchSAFOpenDocument.launch( mime-string[] ) using
+     *                    new ContractOpenDocumentInFolder() to set initial folder
+     *      ->  onActivityResult( uri ) ==>
+     *
+     *  ==> saveFile( uri )
+     *      FileOperations.writeFileContent( MainActivity.this, uri, content );
+     *
+     * Notes:
+     * StartActivityForResult() is a standard contract
+     *
+     * ContractOpenDocumentInFolder is an extended contract without constructor
+     * - ActivityResultLauncher<String[]> launchSAFOpenDocument - where String[] the mime-types
+     * to open
+     * - new ActivityResultCallback<Uri>() - where Uri is the returned type (uri of the opened
+     * file)
+     */
+
     private void loadFile()
         {
         if ( useExperimentalFileExplorerSwitch.isChecked() )
@@ -238,7 +331,7 @@ public class MainActivity extends AppCompatActivity
      * where createOpenDocumentTree() works only above API 29 (Q)
      * Currently it always starts from Documents
      */
-    static private class ContractOpenDocumentInFolder extends androidx.activity.result.contract.ActivityResultContracts.OpenDocument
+    static private class ContractOpenDocumentInFolder extends ActivityResultContracts.OpenDocument
         {
         @NonNull
         @Override
@@ -256,7 +349,7 @@ public class MainActivity extends AppCompatActivity
                 // so, this will work only above API 29
                 {
                 Uri uri;
-                if ((uri = FileOperations.getStartingDirectoryAsUri(context))!= null)
+                if ((uri = FileOperations.getStartingFolderAsUri(context))!= null)
                     {
                     intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, uri);
                     }
@@ -299,16 +392,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-
-
-
-
-
-
-
-
-
-
     ActivityResultLauncher<Intent> launchLoad = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>()
@@ -330,55 +413,131 @@ public class MainActivity extends AppCompatActivity
                         // Perform operations on the document using its URI.
                         }
 
-                    if (uri == null)
+                    loadFile( uri );
+                    }
+                });
+
+
+    /***** SELECT FOLDER  P A R T *****/
+
+    /**
+     * selectFolder()
+     * -> experimental -> intent - SelectFileActivity.class
+     *                    action - Intent.ACTION_OPEN_DOCUMENT_TREE
+     *                    launchSelectFolder.launch() using ActivityResultContracts
+     *                    .StartActivityForResult()
+     *      ->  onActivityResult( result );
+     *
+     *      - > result.getResultCode() == SelectFileActivity.RESULT_MAIN_FOLDER_SELECTED
+     *          no uri is returned, app's private folder was selected ==>
+     *      - > result.getResultCode() == RESULT_OK - linked folder was selected
+     *          uri = result.getData.getData(); ==>
+     *
+     * -> built-in ->     launchSAFOpenDocumentTree.launch( initialfolder ) using
+     *                    ActivityResultContracts.OpenDocumentTree()
+     *      ->  onActivityResult( uri )
+     *          takePersistableUriPermission is needed!! ==>
+     *
+     *  ==> folderWasSelected( uri )
+     *      FileOperations.findFileInFolder() tries to find file with given file-name (inside
+     *      folder)
+     *
+     * Notes:
+     * StartActivityForResult() is a standard contract
+     *
+     * - ActivityResultLauncher<Uri> launchSAFOpenDocumentTree - where Uri is the initial folder
+     * - new ActivityResultCallback<Uri>() - where Uri is the treeUri of the returned folder
+     */
+
+    private void selectFolder()
+        {
+        if ( useExperimentalFileExplorerSwitch.isChecked() )
+            {
+            Intent intent = new Intent(this, SelectFileActivity.class);
+            intent.setAction( Intent.ACTION_OPEN_DOCUMENT_TREE );
+            launchSelectFolder.launch(intent);
+            }
+        else
+            {
+            // ActivityResultContracts.OpenDocumentTree() gets starting folder as Uri
+            Uri uri = FileOperations.getStartingFolderAsUri(this );
+            launchSAFOpenDocumentTree.launch( uri );
+            }
+        }
+
+
+    /**
+     * launchSAFOPenDocument uses extended ContractOpenDocumentFolder to help launch SAF built-in
+     * file browser to load file.
+     * Content will be loaded (after returning from file-chooser) inside onActivityResult()
+     */
+    ActivityResultLauncher<Uri> launchSAFOpenDocumentTree = registerForActivityResult(
+            new ActivityResultContracts.OpenDocumentTree(),
+            new ActivityResultCallback<Uri>()
+                {
+                @Override
+                public void onActivityResult(Uri uri)
+                    {
+                    if (uri != null )
                         {
-                        fileNameOfLoadedFile.setText("ERROR!");
-                        }
-                    else
-                        {
-                        fileNameOfLoadedFile.setText(uri.toString());
-                        String content = FileOperations.readFileContent(MainActivity.this,
-                                uri);
-                        contentOfLoadedFile.setText(content);
+                        getContentResolver().takePersistableUriPermission(uri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+                        Log.i("FOLDER", "Selected folder: " + uri );
+
+                        // TODO: FOLDER WAS SELECTED !!!!!!!!!
+                        folderWasSelected( uri );
                         }
                     }
                 });
 
 
-    ActivityResultLauncher<Intent> launchSave = registerForActivityResult(
+    ActivityResultLauncher<Intent> launchSelectFolder = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>()
                 {
                 @Override
                 public void onActivityResult(ActivityResult result)
                     {
-                    if (result.getResultCode() != RESULT_OK)
+                    if (result.getResultCode() == RESULT_OK)
                         {
-                        Log.e("ERROR!", "Something went wrong!");
+                        Intent resultData = result.getData();
+
+                        Uri uri = null;
+                        if (resultData != null)
+                            {
+                            uri = resultData.getData();
+                            // Perform operations on the document using its URI.
+                            }
+                        Log.i("FOLDER", "Experimental browser: Selected folder: " + uri );
+
+                        // TODO: FOLDER WAS SELECETED !!!!!!! //
+                        folderWasSelected( uri );
                         }
-
-                    Intent resultData = result.getData();
-
-                    Uri uri = null;
-                    if (resultData != null)
+                    else if (result.getResultCode() == SelectFileActivity.RESULT_MAIN_FOLDER_SELECTED)
+                    // RESULT_OK and special uri (like null) should do the same trick
                         {
-                        uri = resultData.getData();
-                        // Perform operations on the document using its URI.
-                        }
+                        Log.i("FOLDER", "Experimental browser: Main folder was selected");
 
-                    if (uri == null)
-                        {
-                        fileNameOfSavedFile.setText("ERROR!");
+                        // TODO: FOLDER WAS SELECETED !!!!!!! //
+                        folderWasSelected( null );
                         }
                     else
-                        {
-                        fileNameOfSavedFile.setText(uri.toString());
-                        String content = contentOfSavedFile.getText().toString();
-                        content = FileOperations.writeFileContent(MainActivity.this, uri, content);
-                        contentOfSavedFile.setText(content);
-                        }
+                        Log.e("ERROR!", "Something went wrong!");
                     }
                 });
+
+
+    public void folderWasSelected( Uri treeUri )
+        {
+        Uri uri = FileOperations.findFileInFolder( this, fileInFolder.getText().toString(), treeUri );
+
+        uriInFolder.setText( uri==null ? "File not found!" : uri.toString());
+        Log.d("FOLDER", "Uri found: " + uri );
+        }
+
+
 
     /**  These are original methods  **/
 
