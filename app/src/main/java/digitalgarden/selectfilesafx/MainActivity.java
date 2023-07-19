@@ -19,13 +19,20 @@ import android.util.Log;
 import android.view.View;
 
 import androidx.appcompat.widget.SwitchCompat;
-import digitalgarden.selectfilesafx.fileoperations.FileOperations;
+import androidx.documentfile.provider.DocumentFile;
+import digitalgarden.selectfilesafx.selectfile.AssetOperations;
+import digitalgarden.selectfilesafx.selectfile.FileOperations;
 import digitalgarden.selectfilesafx.selectfile.SelectFileActivity;
 
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+
+import java.io.IOException;
+
+import static digitalgarden.selectfilesafx.FileOperationExamples.readFileContent;
+import static digitalgarden.selectfilesafx.FileOperationExamples.writeFileContent;
 
 /**
  * Sample project to demonstrate file save/load by SAF (built-in file browser) and by an
@@ -251,7 +258,7 @@ public class MainActivity extends AppCompatActivity
             {
             fileNameOfSavedFile.setText(uri.toString());
             String content = contentOfSavedFile.getText().toString();
-            content = FileOperations.writeFileContent(MainActivity.this, uri, content);
+            content = writeFileContent(MainActivity.this, uri, content);
             contentOfSavedFile.setText(content);
             }
         }
@@ -387,7 +394,7 @@ public class MainActivity extends AppCompatActivity
         else
             {
             fileNameOfLoadedFile.setText(uri.toString());
-            String content = FileOperations.readFileContent(MainActivity.this, uri);
+            String content = readFileContent(MainActivity.this, uri);
             contentOfLoadedFile.setText(content);
             }
         }
@@ -409,8 +416,12 @@ public class MainActivity extends AppCompatActivity
                     Uri uri = null;
                     if (resultData != null)
                         {
-                        uri = resultData.getData();
                         // Perform operations on the document using its URI.
+                        uri = resultData.getData();
+
+                        // Current folder is returned as extra, as well
+                        Log.d("FOLDER",
+                                "Returned folder: " + resultData.getParcelableExtra("FOLDER"));
                         }
 
                     loadFile( uri );
@@ -487,7 +498,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i("FOLDER", "Selected folder: " + uri );
 
                         // TODO: FOLDER WAS SELECTED !!!!!!!!!
-                        folderWasSelected( uri );
+                        folderIsSelected( uri );
                         }
                     }
                 });
@@ -513,7 +524,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i("FOLDER", "Experimental browser: Selected folder: " + uri );
 
                         // TODO: FOLDER WAS SELECETED !!!!!!! //
-                        folderWasSelected( uri );
+                        folderIsSelected( uri );
                         }
                     else if (result.getResultCode() == SelectFileActivity.RESULT_MAIN_FOLDER_SELECTED)
                     // RESULT_OK and special uri (like null) should do the same trick
@@ -521,7 +532,7 @@ public class MainActivity extends AppCompatActivity
                         Log.i("FOLDER", "Experimental browser: Main folder was selected");
 
                         // TODO: FOLDER WAS SELECETED !!!!!!! //
-                        folderWasSelected( null );
+                        folderIsSelected( null );
                         }
                     else
                         Log.e("ERROR!", "Something went wrong!");
@@ -529,12 +540,23 @@ public class MainActivity extends AppCompatActivity
                 });
 
 
-    public void folderWasSelected( Uri treeUri )
+    public void folderIsSelected(Uri treeUri )
         {
-        Uri uri = FileOperations.findFileInFolder( this, fileInFolder.getText().toString(), treeUri );
 
+        Uri uri = FileOperations.findFileInFolder( this, fileInFolder.getText().toString(), treeUri );
         uriInFolder.setText( uri==null ? "File not found!" : uri.toString());
         Log.d("FOLDER", "Uri found: " + uri );
+
+        /* There is no entry point for asset functions
+        try
+            {
+            AssetOperations.copyAssets( this, treeUri);
+            }
+        catch (IOException e)
+            {
+            Log.e("ASSET", "Cannot copy assets");
+            }
+         */
         }
 
 

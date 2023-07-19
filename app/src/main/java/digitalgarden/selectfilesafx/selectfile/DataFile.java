@@ -35,6 +35,13 @@ class DataFile
 
     DataFile( File file )
         {
+        // It is possible to try only DocumentFile, but file sharing will not work
+        /*
+        this.file = null;
+        this.documentFile = DocumentFile.fromFile(file);
+        this.uri = null;
+        */
+
         this.file = file;
         this.documentFile = null;
         this.uri = null;
@@ -133,6 +140,8 @@ class DataFile
     // DocumentFile's URI - getUri() - content-uri, handeld by documentfile
     // File's uri - Uri.fromFile() - file-uri, cannot be used to provide file to other apps
     // File-provider's uri - generated from file-uri, to provide this (content-uri) to other apps
+    // IMPORTANT!! Folder (such as private-folder) CANNOT be used by file-provider, so Uri
+    // .fromFile() should be used!!
     Uri getUri(Context context)
         {
         if ( uri != null )
@@ -141,10 +150,20 @@ class DataFile
             return uri;
 
         if ( file != null )
-            // File-provider's uri
-            return FileProvider.getUriForFile( context,
-                    context.getApplicationContext().getPackageName() + ".provider",
-                    file);
+            {
+            if (file.isFile())
+                {
+                // File-provider's uri
+                return FileProvider.getUriForFile(context,
+                        context.getApplicationContext().getPackageName() + ".provider",
+                        file);
+                }
+            else
+                {
+                // Folder as uri (these are direct folders of private folder)
+                return Uri.fromFile(file);
+                }
+            }
 
         if ( documentFile != null )
             // DocumentFile's uri

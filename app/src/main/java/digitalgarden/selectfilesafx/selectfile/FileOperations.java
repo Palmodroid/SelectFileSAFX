@@ -1,4 +1,4 @@
-package digitalgarden.selectfilesafx.fileoperations;
+package digitalgarden.selectfilesafx.selectfile;
 
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +10,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -22,7 +23,6 @@ import androidx.documentfile.provider.DocumentFile;
 
 public class FileOperations
     {
-
     /**
      * Helper method to get starting folder from createOpenDocumentTreeIntent()
      * @param context application context
@@ -118,11 +118,45 @@ public class FileOperations
         }
 
 
-    public static Uri findFileInFolder( Context context, String fileName, Uri treeUri )
+    /**
+     * Helper method to close a stream without throwing IOException.
+     * Android supports try-with only above API 19!
+     * @param closeable stream to close
+     */
+    public static void closeSilently( Closeable closeable )
         {
-        Uri fileUri = null;
+        if ( closeable != null )
+            {
+            try
+                {
+                closeable.close();
+                }
+            catch ( IOException ioe )
+                {
+                ; // do nothing, this error cannot be noted
+                }
+            }
+        }
 
-        if ( treeUri == null )  // private folder
+
+    public static Uri findFileInFolder( Context context, String fileName, Uri folderUri )
+        {
+        DocumentFile folder = getDocumentFileFromFolderUri( context, folderUri);
+
+        if ( folder != null )
+            {
+            DocumentFile file = folder.findFile(fileName);
+            if ( file != null )
+                {
+                return file.getUri();
+                }
+            }
+        return null;
+
+        /*
+        // This was a previous solution only for private folder
+        // It was preserved to see, how to deal with file-based methods
+        if ( folderUri == null )  // private folder
             {
             File folder = getPrivateFolder(context);
             File[] files = folder.listFiles();
@@ -140,22 +174,35 @@ public class FileOperations
                     }
                 }
             }
-        else
-            {
-            DocumentFile folder = DocumentFile.fromTreeUri( context, treeUri );
-            if ( folder != null )
-                {
-                DocumentFile file = folder.findFile(fileName);
-                if ( file != null )
-                    {
-                    fileUri = file.getUri();
-                    }
-                }
-            }
-        return fileUri;
+         */
         }
 
+    /**
+     * Returns DocumentFile from folder-uri.
+     * Folder uri can be null - private folder is used (check getPrivateFolder())
+     * Folder uri can be file - these are sub-folders of private folder
+     * Folder uri can be content - these are tree-uris returned by open-document-tree
+     * Problem: whether "file" is folder or file - can be decided by isFile() or isDirectory()
+     * BUT!!
+     * How to decide if uri is tree-uri or single-uri?? isDocumentUri ?? It always resulted false.
+     * @param context application context
+     * @param folderUri uri of the folder
+     * @return folder as DocumentFile
+     */
+    public static DocumentFile getDocumentFileFromFolderUri( Context context, Uri folderUri )
+        {
+        if (folderUri == null)
+            {
+            return DocumentFile.fromFile( FileOperations.getPrivateFolder(context) );
+            }
 
+        if (folderUri.getScheme().equals("file"))
+            {
+            return DocumentFile.fromFile(new File(folderUri.getPath()));
+            }
+
+        return DocumentFile.fromTreeUri(context, folderUri);
+        }
 
     /*
      * getStartingDirectoryAsIntent() was needed by StartActivityForResult()
@@ -186,79 +233,5 @@ public class FileOperations
         return intent;
         }
      */
-
-
-    /**
-     * Sample method to read content of file uri using BufferedReader and InputStreamReader
-     * @param context application context
-     * @param uri uri of the file
-     * @return content or some infomation about errors
-     */
-    public static String readFileContent(Context context, Uri uri)
-        {
-        // https://docs.oracle.com/javase/7/docs/technotes/guides/language/try-with-resources.html
-        try ( BufferedReader reader = new BufferedReader(
-                new InputStreamReader(
-                        context.getContentResolver().openInputStream(uri))))
-            {
-            StringBuilder stringBuilder = new StringBuilder();
-            String currentline;
-            while ((currentline = reader.readLine()) != null)
-                {
-                stringBuilder.append(currentline).append("\n");
-                }
-            return stringBuilder.toString();
-            }
-        catch (FileNotFoundException e)
-            {
-            return "FILE NOT FOUND";
-            }
-        catch (IOException e)
-            {
-            return "I/O ERROR";
-            }
-        }
-
-
-    /**
-     * Sample method to write content to file uri using BufferedWriter and OutputStreamWriter
-     * @param context application context
-     * @param uri uri of the file
-     * @param content String content to write to the file
-     * @return content or some infomation about errors
-     */
-    public static String writeFileContent(Context context, Uri uri, String content)
-        {
-        try ( BufferedWriter writer = new BufferedWriter
-                ( new OutputStreamWriter
-                        ( context.getContentResolver().openOutputStream( uri ))))
-            {
-            writer.write( content );
-            return content;
-            }
-
-            /* Writer is character based (with encodings), while Stream is binary, data should be
-             * encoded previously
-
-            ParcelFileDescriptor parcelFileDescriptor =
-                    context.getContentResolver().openFileDescriptor(uri, "w");
-            FileOutputStream fileOutputStream =
-                    new FileOutputStream(parcelFileDescriptor.getFileDescriptor());
-
-            fileOutputStream.write( content.getBytes());
-
-            fileOutputStream.close();
-            parcelFileDescriptor.close();
-             */
-
-        catch (FileNotFoundException e)
-            {
-            return "FILE NOT FOUND";
-            }
-        catch (IOException e)
-            {
-            return "I/O ERROR";
-            }
-        }
 
     }

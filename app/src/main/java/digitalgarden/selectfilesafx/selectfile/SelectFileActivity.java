@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -27,7 +26,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
-import digitalgarden.selectfilesafx.fileoperations.FileOperations;
 import digitalgarden.selectfilesafx.R;
 
 public class SelectFileActivity extends AppCompatActivity
@@ -129,7 +127,6 @@ public class SelectFileActivity extends AppCompatActivity
                         to uri (this will be a tree uri) which can be compared to stored
                         Documentfile-uri */
 
-                        Uri uriPermissionUri;
                         List<UriPermission> uriPermissions = getContentResolver().getPersistedUriPermissions();
                         for (UriPermission uriPermission : uriPermissions)
                             {
@@ -184,6 +181,17 @@ public class SelectFileActivity extends AppCompatActivity
                             Intent returnIntent = new Intent();
 
                             returnIntent.setData(entry.getDataFile().getUri(SelectFileActivity.this));
+
+                            // Add folder as an extra, too
+                            // https://stackoverflow.com/a/13981436
+                            // As parcelable android.net.Uri can inserted as extra
+                            // intent.getParcelableExtra("something") will get it
+
+                            returnIntent.putExtra("FOLDER",
+                                    variables.currentFolder.getUri(SelectFileActivity.this));
+                            // currentFolder cannot be null, as populate() fills it with private
+                            // folder if 'null' folder is populated
+
                             setResult(RESULT_OK, returnIntent);
                             finish();
                             }
